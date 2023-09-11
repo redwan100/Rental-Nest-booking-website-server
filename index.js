@@ -95,14 +95,18 @@ async function run() {
 
     app.get("/all-rooms", async (req, res) => {
       try {
-        const result = await roomsCollection.find().toArray();
+        const query = Object.keys(req.query).length > 0 ? req.query : {};
+        const result =
+          req.query.category === "all"
+            ? await roomsCollection.find().toArray()
+            : await roomsCollection.find(query).toArray();
         res.send(result);
       } catch (error) {
         console.log(error);
       }
     });
 
-    app.get("/my-bookings-room/:email", async (req, res) => {
+    app.get("/my-bookings-room/:email", verifyJWT, async (req, res) => {
       try {
         const email = req.params.email;
         if (!email) {
@@ -213,7 +217,7 @@ async function run() {
     });
 
     // GET HOSTED BOOKING ROOM
-    app.get("/booked-room", async (req, res) => {
+    app.get("/booked-room", verifyJWT, async (req, res) => {
       try {
         const email = req.query.email;
         const query = { host: email };
